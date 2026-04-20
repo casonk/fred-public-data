@@ -1,0 +1,99 @@
+# FRED series catalog
+# Each entry defines a series ID and metadata for the download + visualization pipeline.
+# Add or remove series here; refresh.py reads this file at runtime.
+
+[defaults]
+frequency = "q"          # default observation frequency filter (d/w/m/q/sa/a/wef/weth/wew/wetu/wem/wesu/wesa/bwew/bwem)
+units = "lin"            # default units transform (lin/chg/ch1/pch/pc1/pca/cca/log)
+vintage_dates = []       # leave empty to fetch latest vintage
+
+[[series]]
+id = "GDP"
+title = "Gross Domestic Product"
+category = "national_accounts"
+frequency = "q"
+units = "lin"
+
+[[series]]
+id = "GDPC1"
+title = "Real Gross Domestic Product"
+category = "national_accounts"
+frequency = "q"
+units = "lin"
+
+[[series]]
+id = "UNRATE"
+title = "Unemployment Rate"
+category = "labor_market"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "PAYEMS"
+title = "All Employees, Total Nonfarm"
+category = "labor_market"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "CPIAUCSL"
+title = "Consumer Price Index for All Urban Consumers: All Items"
+category = "prices"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "PCEPI"
+title = "Personal Consumption Expenditures: Chain-type Price Index"
+category = "prices"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "FEDFUNDS"
+title = "Effective Federal Funds Rate"
+category = "interest_rates"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "T10Y2Y"
+title = "10-Year Treasury Constant Maturity Minus 2-Year Treasury (Yield Curve Spread)"
+category = "interest_rates"
+frequency = "d"
+units = "lin"
+
+[[series]]
+id = "DGS10"
+title = "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity"
+category = "interest_rates"
+frequency = "d"
+units = "lin"
+
+[[series]]
+id = "MORTGAGE30US"
+title = "30-Year Fixed Rate Mortgage Average"
+category = "housing"
+frequency = "w"
+units = "lin"
+
+[[series]]
+id = "HOUST"
+title = "Housing Starts: Total — New Privately Owned Housing Units Started"
+category = "housing"
+frequency = "m"
+units = "lin"
+
+[[series]]
+id = "SP500"
+title = "S&P 500"
+category = "markets"
+frequency = "d"
+units = "lin"
+
+[[series]]
+id = "DCOILWTICO"
+title = "Crude Oil Prices: West Texas Intermediate (WTI)"
+category = "commodities"
+frequency = "d"
+units = "lin"
