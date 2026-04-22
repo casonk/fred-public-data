@@ -1,0 +1,17 @@
+@startuml classes_fred-public-data
+set namespaceSeparator none
+class "DownloadStats" as refresh.DownloadStats {
+  downloaded : int
+  empty : int
+  failed : int
+  series : list[str]
+  skipped : int
+}
+class "SeriesSpec" as refresh.SeriesSpec {
+  category : str
+  frequency : str
+  id : str
+  title : str
+  units : str
+}
+@enduml

@@ -1,0 +1,61 @@
+@startuml
+!pragma layout smetana
+title fred-public-data Repository Architecture
+skinparam shadowing false
+skinparam defaultFontName Monospace
+skinparam packageStyle rectangle
+
+actor Contributor as contributor
+
+package "Operator + Documentation Surface" #F8FAFC {
+  rectangle "README.md" as readme #E2E8F0
+  rectangle "AGENTS.md\nLESSONSLEARNED.md" as guidance #E2E8F0
+  rectangle "docs/ARCHITECTURE.md\ncontributor-architecture-blueprint.md" as docs #DBEAFE
+}
+
+package "Refresh Engine (refresh.py)" #F8FAFC {
+  rectangle "parse_args()\nensure_dirs()" as entry #E0F2FE
+  rectangle "load_catalog()\nseries metadata" as catalog #E0F2FE
+  rectangle "fetch_observations()\nFRED API requests" as download #E0F2FE
+  rectangle "plot_all()\nlatest_dates()" as reporting #E0F2FE
+}
+
+package "Repository State" #F8FAFC {
+  rectangle "config/series_catalog.toml" as series_catalog #FCE7F3
+  rectangle "data/\nper-series CSV observations" as data #DCFCE7
+  rectangle "viz/\nper-series PNG charts" as viz #DCFCE7
+}
+
+package "Verification + Diagrams" #F8FAFC {
+  rectangle "tests/test_refresh.py" as tests #FCE7F3
+  rectangle ".github/workflows/ci.yml" as workflows #DCFCE7
+  rectangle "docs/diagrams/repo-architecture.puml\nrepo-architecture.drawio" as diagram_sources #FCE7F3
+}
+
+contributor --> readme
+contributor --> guidance
+guidance --> docs
+docs --> diagram_sources
+
+contributor --> entry
+entry --> catalog
+catalog --> series_catalog
+catalog --> download
+download --> data
+data --> reporting
+reporting --> viz
+reporting --> readme : summary + latest lines
+
+tests ..> catalog
+tests ..> download
+tests ..> reporting
+workflows --> tests
+diagram_sources --> entry
+diagram_sources --> data
+diagram_sources --> viz
+
+note right of download
+  FRED API authentication comes from
+  the FRED_API_KEY environment variable.
+end note
+@enduml
