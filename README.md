@@ -26,17 +26,20 @@ with attribution per the [FRED Terms of Use](https://fred.stlouisfed.org/legal/)
 
 ## Prerequisites
 
-Register for a free FRED API key at https://fred.stlouisfed.org/docs/api/api_key.html, then
-set the environment variable before running:
-
-```bash
-export FRED_API_KEY="your_key_here"
-```
-
 Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
+
+No API key is required. By default `refresh.py` uses FRED's public CSV endpoint — just
+install and run.
+
+Optionally set `FRED_API_KEY` to unlock the full REST API, which honours the `frequency`
+and `units` transforms declared per-series in `config/series_catalog.toml`:
+
+```bash
+export FRED_API_KEY="your_key_here"   # optional; register free at fred.stlouisfed.org
 ```
 
 ## Running the refresh

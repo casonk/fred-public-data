@@ -27,10 +27,15 @@ economic research and README publication.
 
 ## Authentication
 
-The FRED API requires a free API key. Set it as an environment variable before running:
+`refresh.py` works without any credentials by default. When `FRED_API_KEY` is not set it
+uses the public `fredgraph.csv` endpoint — no registration required.
+
+Setting `FRED_API_KEY` switches to the full REST API, which supports the `frequency` and
+`units` transforms declared per-series in `config/series_catalog.toml`. Register for a free
+key at https://fred.stlouisfed.org/docs/api/api_key.html.
 
 ```bash
-export FRED_API_KEY="your_key_here"
+export FRED_API_KEY="your_key_here"   # optional; enables frequency/units transforms
 ```
 
 Never commit the key. Use a `.env` file excluded by `.gitignore`, or retrieve it from
@@ -38,12 +43,14 @@ Never commit the key. Use a `.env` file excluded by `.gitignore`, or retrieve it
 
 ## Working Rules
 
+- `python refresh.py` works out-of-the-box with no credentials (public CSV endpoint).
 - Prefer `python refresh.py --resume` for standard refresh work (skips already-downloaded series).
 - Use `python refresh.py --skip-download` when only the plots need to be regenerated.
 - Use `python refresh.py --skip-viz` when you only want to test the download path.
 - Add new series by appending a `[[series]]` block to `config/series_catalog.toml`.
 - Do not commit `data/` or `viz/` unless the user explicitly asks and confirms the storage plan.
 - The FRED missing-value sentinel is `"."` — `refresh.py` drops these rows via `pd.to_numeric(errors="coerce")`.
+- `frequency` and `units` catalog fields are only applied when `FRED_API_KEY` is set; the CSV endpoint always returns the default release frequency.
 
 ## Validation
 

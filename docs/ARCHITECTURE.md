@@ -46,8 +46,21 @@ regenerate or drift-check the starter layout.
 6. The command prints `[summary]` counters and `[latest]` timestamps so the operator can
    verify what was refreshed.
 
+## Fetch Strategy
+
+`fetch_observations` dispatches based on whether `FRED_API_KEY` is set:
+
+- **No key (default):** `_fetch_via_csv` — calls `https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID>`.
+  No credentials required. Returns the default release frequency; `frequency` and `units`
+  catalog fields are ignored.
+- **Key present:** `_fetch_via_api` — calls `GET /fred/series/observations` with the
+  configured `frequency` and `units` parameters, enabling aggregation and unit transforms.
+
+Both paths normalize output to a two-column DataFrame (`date`, `value`) and drop rows where
+`value` is the FRED missing-value sentinel `"."`.
+
 ## Authentication Boundary
 
-The FRED API key is resolved exclusively from the `FRED_API_KEY` environment variable.
-It is never written to disk, logged, or included in any committed file. Use a shell profile,
+`FRED_API_KEY` is optional. When set it is resolved exclusively from the environment variable
+and is never written to disk, logged, or included in any committed file. Use a shell profile,
 `.env` (gitignored), or `./util-repos/auto-pass` for key retrieval.
