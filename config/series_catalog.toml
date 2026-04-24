@@ -97,3 +97,10 @@ title = "Crude Oil Prices: West Texas Intermediate (WTI)"
 category = "commodities"
 frequency = "d"
 units = "lin"
+
+[[series]]
+id = "USREC"
+title = "NBER-Based Recession Indicators for the United States"
+category = "indicators"
+frequency = "m"
+units = "lin"

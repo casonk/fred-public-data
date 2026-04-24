@@ -19,6 +19,10 @@ economic research and README publication.
   frequency and units settings. Edit this file to add or remove series.
 - `refresh.py`: canonical batch workflow for download, validation, plot generation, and
   freshness reporting.
+- `explore.ipynb`: example notebook covering keyless data fetching, YoY growth, recession
+  shading, inflation vs Fed Funds rate, and yield curve analysis.
+- `scripts/make_explore_notebook.py`: regenerates `explore.ipynb` from its embedded cell
+  source strings. Run after editing cell content in the script.
 - `data/`: downloaded CSV observations, organized by category subdirectory. Generated output,
   large, and kept out of git.
 - `viz/`: full regenerated plot set, organized by category. Generated output, kept out of git.
