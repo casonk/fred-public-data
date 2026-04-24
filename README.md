@@ -17,8 +17,11 @@ with attribution per the [FRED Terms of Use](https://fred.stlouisfed.org/legal/)
 - `config/series_catalog.toml` is the canonical list of FRED series IDs to track. Edit it
   to add or remove series — no code changes needed.
 - `refresh.py` is the operator entrypoint. It reads the catalog, fetches observations from
-  the FRED API, writes CSVs into `data/`, regenerates charts into `viz/`, and reports the
-  newest observation date per series.
+  the FRED CSV endpoint (or API if a key is set), writes CSVs into `data/`, regenerates
+  charts into `viz/`, and reports the newest observation date per series.
+- `explore.ipynb` is an example notebook demonstrating keyless data fetching, year-over-year
+  growth, recession shading, inflation vs fed funds, and yield curve analysis.
+- `scripts/make_explore_notebook.py` regenerates `explore.ipynb` from its cell source strings.
 - `data/` holds downloaded CSVs organized by category (e.g. `data/labor_market/UNRATE.csv`).
 - `viz/` contains PNG charts organized by category.
 - `tests/test_refresh.py` is the regression surface for catalog loading and observation parsing.
