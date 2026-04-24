@@ -18,6 +18,7 @@ VIZ_DIR = ROOT / "viz"
 CATALOG_PATH = ROOT / "config" / "series_catalog.toml"
 
 FRED_API_BASE = "https://api.stlouisfed.org/fred"
+FRED_CSV_BASE = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 
 
 @dataclass
@@ -59,22 +60,38 @@ def ensure_dirs() -> None:
     VIZ_DIR.mkdir(exist_ok=True)
 
 
-def api_key() -> str:
-    key = os.environ.get("FRED_API_KEY", "").strip()
-    if not key:
-        raise SystemExit(
-            "FRED_API_KEY environment variable is not set.\n"
-            "Register for a free key at https://fred.stlouisfed.org/docs/api/api_key.html"
-        )
-    return key
+def api_key() -> str | None:
+    return os.environ.get("FRED_API_KEY", "").strip() or None
 
 
-def fetch_observations(
-    session: requests.Session,
-    spec: SeriesSpec,
-    key: str,
-) -> pd.DataFrame | None:
-    url = f"{FRED_API_BASE}/series/observations"
+def _fetch_via_csv(session: requests.Session, spec: SeriesSpec) -> pd.DataFrame | None:
+    """Keyless path — uses the public fredgraph.csv endpoint (default frequency/units only)."""
+    try:
+        resp = session.get(FRED_CSV_BASE, params={"id": spec.id}, timeout=30)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        print(f"  [error] {spec.id}: {exc}")
+        return None
+
+    try:
+        from io import StringIO
+
+        df = pd.read_csv(StringIO(resp.text))
+    except Exception as exc:
+        print(f"  [error] {spec.id}: failed to parse CSV: {exc}")
+        return None
+
+    if df.empty or df.shape[1] < 2:
+        return None
+
+    df.columns = ["date", "value"]
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+    return df.dropna(subset=["date", "value"]).reset_index(drop=True)
+
+
+def _fetch_via_api(session: requests.Session, spec: SeriesSpec, key: str) -> pd.DataFrame | None:
+    """API path — supports frequency and units transforms; requires FRED_API_KEY."""
     params = {
         "series_id": spec.id,
         "api_key": key,
@@ -83,14 +100,13 @@ def fetch_observations(
         "units": spec.units,
     }
     try:
-        resp = session.get(url, params=params, timeout=30)
+        resp = session.get(f"{FRED_API_BASE}/series/observations", params=params, timeout=30)
         resp.raise_for_status()
     except requests.RequestException as exc:
         print(f"  [error] {spec.id}: {exc}")
         return None
 
-    payload = resp.json()
-    observations = payload.get("observations", [])
+    observations = resp.json().get("observations", [])
     if not observations:
         return None
 
@@ -100,10 +116,20 @@ def fetch_observations(
     return df.dropna(subset=["value"]).reset_index(drop=True)
 
 
+def fetch_observations(
+    session: requests.Session,
+    spec: SeriesSpec,
+    key: str | None = None,
+) -> pd.DataFrame | None:
+    if key:
+        return _fetch_via_api(session, spec, key)
+    return _fetch_via_csv(session, spec)
+
+
 def download_all(
     catalog: list[SeriesSpec],
     session: requests.Session,
-    key: str,
+    key: str | None = None,
     resume: bool = False,
 ) -> DownloadStats:
     stats = DownloadStats()
@@ -209,6 +235,10 @@ def main() -> None:
 
     if not args.skip_download:
         key = api_key()
+        if key:
+            print("[auth] FRED_API_KEY found — using API (frequency/units transforms enabled)")
+        else:
+            print("[auth] no FRED_API_KEY — using public CSV endpoint (default frequency/units)")
         with requests.Session() as session:
             stats = download_all(catalog, session, key, resume=args.resume)
         print(

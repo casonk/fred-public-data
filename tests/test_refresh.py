@@ -7,7 +7,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from refresh import SeriesSpec, load_catalog
+from refresh import SeriesSpec, fetch_observations, load_catalog
 
 
 def test_load_catalog_not_empty():
@@ -38,11 +38,7 @@ def test_series_spec_frequency_valid():
         assert spec.frequency in valid_frequencies, msg
 
 
-def test_fetch_observations_parses_mock_response(monkeypatch):
-    import requests
-
-    from refresh import fetch_observations
-
+def test_fetch_observations_api_path(monkeypatch):
     mock_payload = {
         "observations": [
             {"date": "2024-01-01", "value": "100.0"},
@@ -67,6 +63,29 @@ def test_fetch_observations_parses_mock_response(monkeypatch):
 
     assert df is not None
     assert len(df) == 2, "missing-value sentinel '.' should be dropped"
+    assert list(df.columns) == ["date", "value"]
+    assert pd.api.types.is_datetime64_any_dtype(df["date"])
+    assert pd.api.types.is_float_dtype(df["value"])
+
+
+def test_fetch_observations_csv_path_no_key():
+    csv_body = "DATE,GDP\n2024-01-01,100.0\n2024-04-01,101.5\n2024-07-01,.\n"
+
+    class MockResponse:
+        text = csv_body
+
+        def raise_for_status(self):
+            pass
+
+    class MockSession:
+        def get(self, *args, **kwargs):
+            return MockResponse()
+
+    spec = SeriesSpec(id="GDP", title="Gross Domestic Product", category="national_accounts")
+    df = fetch_observations(MockSession(), spec, key=None)
+
+    assert df is not None
+    assert len(df) == 2, "missing-value sentinel '.' should be dropped on CSV path"
     assert list(df.columns) == ["date", "value"]
     assert pd.api.types.is_datetime64_any_dtype(df["date"])
     assert pd.api.types.is_float_dtype(df["value"])
