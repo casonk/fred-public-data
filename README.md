@@ -19,8 +19,12 @@ with attribution per the [FRED Terms of Use](https://fred.stlouisfed.org/legal/)
 - `refresh.py` is the operator entrypoint. It reads the catalog, fetches observations from
   the FRED CSV endpoint (or API if a key is set), writes CSVs into `data/`, regenerates
   charts into `viz/`, and reports the newest observation date per series.
-- `explore.ipynb` is an example notebook demonstrating keyless data fetching, year-over-year
-  growth, recession shading, inflation vs fed funds, and yield curve analysis.
+- `EXAMPLES.md` is a full written report with embedded charts, data provenance table, and
+  in-depth economic analysis for each series — rendered directly on GitHub.
+- `examples/` holds the four tracked PNGs embedded in that report.
+- `scripts/generate_examples.py` fetches live FRED data, regenerates the `examples/` PNGs,
+  and prints a markdown data-summary table.
+- `explore.ipynb` is an interactive notebook covering the same analyses.
 - `scripts/make_explore_notebook.py` regenerates `explore.ipynb` from its cell source strings.
 - `data/` holds downloaded CSVs organized by category (e.g. `data/labor_market/UNRATE.csv`).
 - `viz/` contains PNG charts organized by category.
