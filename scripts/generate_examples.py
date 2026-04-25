@@ -68,8 +68,11 @@ SERIES_META = {
     "UNRATE": ("labor_market", "Unemployment Rate", "Monthly", "%"),
     "PAYEMS": ("labor_market", "Nonfarm Payrolls", "Monthly", "Thousands"),
     "CPIAUCSL": ("prices", "CPI All Urban Consumers", "Monthly", "Index 1982-84=100"),
+    "PCEPI": ("prices", "PCE Chain-type Price Index", "Monthly", "Index 2017=100"),
     "FEDFUNDS": ("interest_rates", "Effective Federal Funds Rate", "Monthly", "%"),
     "T10Y2Y": ("interest_rates", "10Y-2Y Treasury Spread", "Daily", "%"),
+    "MORTGAGE30US": ("housing", "30-Year Fixed Mortgage Rate", "Weekly", "%"),
+    "HOUST": ("housing", "Housing Starts: Total", "Monthly", "Thousands of Units"),
     "USREC": ("indicators", "NBER Recession Indicator", "Monthly", "0/1"),
 }
 
@@ -88,8 +91,11 @@ gdp = data["GDPC1"]
 unrate = data["UNRATE"]
 payems = data["PAYEMS"]
 cpi = data["CPIAUCSL"]
+pce = data["PCEPI"]
 fedfunds = data["FEDFUNDS"]
 spread = data["T10Y2Y"]
+mortgage = data["MORTGAGE30US"]
+houst = data["HOUST"]
 usrec = data["USREC"]
 
 print("\nAll series fetched.\n", file=sys.stderr)
@@ -293,6 +299,142 @@ current_spread = spread.iloc[-1]
 print(
     f"Latest 10Y-2Y Spread: {current_spread:.2f}%  "
     f"({'inverted' if current_spread < 0 else 'normal'})",
+    file=sys.stderr,
+)
+
+# ---------------------------------------------------------------------------
+# Chart 5 — Housing market
+# ---------------------------------------------------------------------------
+
+mortgage_m = mortgage.resample("MS").mean()
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 7), sharex=False)
+
+ax1.plot(mortgage_m.index, mortgage_m.values, color="#ff7f0e", linewidth=1.4)
+shade_recessions(ax1, rec_for(mortgage_m, usrec))
+ax1.set_title("30-Year Fixed Mortgage Rate (MORTGAGE30US)", fontsize=13, fontweight="bold")
+ax1.set_ylabel("Rate (%)")
+for sp in ["top", "right"]:
+    ax1.spines[sp].set_visible(False)
+
+ax2.plot(houst.index, houst.values / 1_000, color="#9467bd", linewidth=1.3)
+shade_recessions(ax2, rec_for(houst, usrec))
+ax2.set_title(
+    "Housing Starts: Total New Privately Owned Units (HOUST)", fontsize=13, fontweight="bold"
+)
+ax2.set_ylabel("Millions of Units (Annual Rate)")
+for sp in ["top", "right"]:
+    ax2.spines[sp].set_visible(False)
+
+for ax in (ax1, ax2):
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.xaxis.set_major_locator(mdates.YearLocator(10))
+
+fig.tight_layout(pad=2)
+fig.savefig(EXAMPLES_DIR / "housing_market.png", bbox_inches="tight")
+plt.close(fig)
+print(
+    f"Latest Mortgage Rate: {mortgage.iloc[-1]:.2f}%  |  "
+    f"Latest Housing Starts: {houst.iloc[-1] / 1_000:.2f}M",
+    file=sys.stderr,
+)
+
+# ---------------------------------------------------------------------------
+# Chart 6 — CPI vs PCE inflation comparison
+# ---------------------------------------------------------------------------
+
+cpi_yoy_full = cpi.pct_change(12) * 100
+pce_yoy_full = pce.pct_change(12) * 100
+
+common_idx = cpi_yoy_full.dropna().index.intersection(pce_yoy_full.dropna().index)
+cpi_cp = cpi_yoy_full.loc[common_idx]
+pce_cp = pce_yoy_full.loc[common_idx]
+rec_cp = usrec.reindex(common_idx, method="ffill").fillna(0)
+
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.plot(cpi_cp.index, cpi_cp.values, color="#d62728", linewidth=1.5, label="CPI YoY %", zorder=3)
+ax.plot(pce_cp.index, pce_cp.values, color="#ff7f0e", linewidth=1.5, label="PCE YoY %", zorder=3)
+ax.fill_between(
+    common_idx,
+    cpi_cp.values,
+    pce_cp.values,
+    alpha=0.18,
+    color="#d62728",
+    label="CPI \u2212 PCE gap",
+)
+ax.axhline(2, color="#555", linewidth=0.9, linestyle="--", label="2% Fed target (PCE)")
+ax.axhline(0, color="black", linewidth=0.6)
+shade_recessions(ax, rec_cp)
+ax.set_title("Inflation Measures: CPI vs PCE Year-over-Year (%)", fontsize=13, fontweight="bold")
+ax.set_ylabel("YoY %")
+ax.legend(loc="upper left", fontsize=9)
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+ax.xaxis.set_major_locator(mdates.YearLocator(5))
+for sp in ["top", "right"]:
+    ax.spines[sp].set_visible(False)
+
+fig.tight_layout()
+fig.savefig(EXAMPLES_DIR / "inflation_comparison.png", bbox_inches="tight")
+plt.close(fig)
+gap = cpi_cp.iloc[-1] - pce_cp.iloc[-1]
+print(
+    f"Latest CPI YoY: {cpi_cp.iloc[-1]:.1f}%  |  "
+    f"Latest PCE YoY: {pce_cp.iloc[-1]:.1f}%  |  Gap: {gap:+.1f}pp",
+    file=sys.stderr,
+)
+
+# ---------------------------------------------------------------------------
+# Chart 7 — Real federal funds rate
+# ---------------------------------------------------------------------------
+
+common_idx = fedfunds.index.intersection(cpi_yoy_full.dropna().index)
+ff_r = fedfunds.loc[common_idx]
+cpi_r = cpi_yoy_full.loc[common_idx]
+real_ff = ff_r - cpi_r
+rec_r = usrec.reindex(common_idx, method="ffill").fillna(0)
+
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.fill_between(
+    real_ff.index,
+    real_ff.values,
+    0,
+    where=(real_ff.values >= 0),
+    interpolate=True,
+    color="#d62728",
+    alpha=0.40,
+    label="Restrictive (real rate \u2265 0)",
+)
+ax.fill_between(
+    real_ff.index,
+    real_ff.values,
+    0,
+    where=(real_ff.values < 0),
+    interpolate=True,
+    color="#2ca02c",
+    alpha=0.40,
+    label="Accommodative (real rate < 0)",
+)
+ax.plot(real_ff.index, real_ff.values, color="#333", linewidth=1.0, alpha=0.85)
+ax.axhline(0, color="black", linewidth=1.1)
+shade_recessions(ax, rec_r)
+ax.set_title(
+    "Real Federal Funds Rate (Nominal Fed Funds \u2212 CPI YoY)",
+    fontsize=13,
+    fontweight="bold",
+)
+ax.set_ylabel("Real Rate (%)")
+ax.legend(loc="upper right", fontsize=9)
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+ax.xaxis.set_major_locator(mdates.YearLocator(5))
+for sp in ["top", "right"]:
+    ax.spines[sp].set_visible(False)
+
+fig.tight_layout()
+fig.savefig(EXAMPLES_DIR / "real_interest_rate.png", bbox_inches="tight")
+plt.close(fig)
+print(
+    f"Latest Real Fed Funds Rate: {real_ff.iloc[-1]:.2f}%  "
+    f"({'restrictive' if real_ff.iloc[-1] >= 0 else 'accommodative'})",
     file=sys.stderr,
 )
 
