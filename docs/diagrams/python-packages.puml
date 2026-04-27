@@ -4,4 +4,6 @@ top to bottom direction
 skinparam componentStyle rectangle
 rectangle "conftest\n1 python file" as conftest
 rectangle "refresh\n1 python file" as refresh
+rectangle "scripts.generate_examples\n1 python file" as scripts.generate_examples
+rectangle "scripts.make_explore_notebook\n1 python file" as scripts.make_explore_notebook
 @enduml
