@@ -12,15 +12,9 @@ default.  Run them explicitly with:
     pytest -m integration --tb=short  # compact tracebacks on failure
 """
 
-import sys
-from pathlib import Path
-
 import pandas as pd
 import pytest
 import requests
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 from refresh import SeriesSpec, fetch_observations, load_catalog
 
