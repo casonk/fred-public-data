@@ -9,8 +9,10 @@ repos:
       - id: detect-private-key
       - id: check-merge-conflict
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.4
+    rev: v0.15.9
     hooks:
+      - id: ruff
+        args: [--fix]
       - id: ruff-format
         name: ruff-format (preferred formatter)
 

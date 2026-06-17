@@ -1,3 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fred-public-data"
+version = "0.1.0"
+description = "FRED dataset mirror and visualization tooling."
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Cason Konzer", email = "casonk@umich.edu" },
+]
+dependencies = [
+    "pandas>=2.0",
+    "requests>=2.28",
+    "matplotlib>=3.7",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff",
+    "dyno_lab @ git+https://github.com/casonk/dyno-lab.git",
+]
+
 [tool.black]
 line-length = 100
 target-version = ["py310"]
@@ -25,10 +52,4 @@ pythonpath = ["."]
 addopts = "-m 'not integration'"
 markers = [
     "integration: requires live network access to FRED (run with: pytest -m integration)",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8",
-    "dyno_lab @ git+https://github.com/casonk/dyno-lab.git",
 ]
