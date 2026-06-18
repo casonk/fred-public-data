@@ -143,14 +143,14 @@ def download_all(
 
         if resume and target.exists() and target.stat().st_size > 0:
             stats.skipped += 1
-            print(f"  skipped (exists)")
+            print("  skipped (exists)")
             stats.series.append(spec.id)
             continue
 
         df = fetch_observations(session, spec, key)
         if df is None or df.empty:
             stats.empty += 1
-            print(f"  empty or unavailable")
+            print("  empty or unavailable")
             continue
 
         df.to_csv(target, index=False)
