@@ -5,6 +5,8 @@ External public repositories, datasets, APIs, and documentation that this repo d
 ## FRED API
 
 - **API documentation:** https://fred.stlouisfed.org/docs/api/fred/
+- **API endpoint:** https://api.stlouisfed.org/fred
+- **CSV endpoint:** https://fred.stlouisfed.org/graph/fredgraph.csv
 - **API key registration:** https://fred.stlouisfed.org/docs/api/api_key.html
 - **Series search:** https://fred.stlouisfed.org/
 - **FRED release calendar:** https://fred.stlouisfed.org/releases/calendar
@@ -34,3 +36,10 @@ All series in `config/series_catalog.toml`:
 
 - `./util-repos/archility` — architecture toolchain bootstrap/render orchestration
 - `./util-repos/dyno-lab` — portfolio-standard test bench utilities
+
+## Python Runtime Libraries
+
+- https://pandas.pydata.org/docs/ — pandas CSV and tabular-data processing reference used by refresh and example generation
+- https://requests.readthedocs.io/ — Requests HTTP client reference used by FRED API and CSV fetch paths
+- https://matplotlib.org/stable/contents.html — Matplotlib plotting reference used by example generation
+- https://tomli.readthedocs.io/ — TOML parser fallback used on Python versions before 3.11
