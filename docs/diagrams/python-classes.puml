@@ -1,4 +1,4 @@
-@startuml classes_fred-public-data
+@startuml classes_checkout
 set namespaceSeparator none
 class "DownloadStats" as refresh.DownloadStats {
   downloaded : int
