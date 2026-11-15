@@ -1,0 +1,30 @@
+# Default-deny for the refresh, then only the St. Louis Fed's public CSV endpoint (keyless mode). Deny rules win over
+# allows in Cilium, so the explicit denies hold even if an allow is added later by mistake. The pod needs no credentials;
+# api.stlouisfed.org is opened only if you ever set an API key.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: fred-public-data-egress
+  namespace: fred-public-data
+spec:
+  endpointSelector:
+    matchLabels: {app: fred-public-data-refresh}
+  ingressDeny:
+    - fromEntities: [all]
+  egressDeny:
+    - toEntities: [host, remote-node, kube-apiserver, health]
+    - toCIDR: ["169.254.0.0/16"]
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports: [{port: "53", protocol: ANY}]
+          rules:
+            dns:
+              - matchName: fred.stlouisfed.org
+    - toFQDNs:
+        - matchName: fred.stlouisfed.org
+      toPorts:
+        - ports: [{port: "443", protocol: TCP}]
