@@ -1,0 +1,60 @@
+# The template for one refresh run. It is never scheduled: the host's weekly timer (with the job guard,
+# the resource arbiter and the README publish step) triggers each run through deploy/k3s/run-job.sh, which creates a Job
+# from this CronJob. The schedule below is Feb 31st, which never occurs, and suspend stays true.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fred-public-data-refresh
+  namespace: fred-public-data
+spec:
+  schedule: "0 0 31 2 *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0                # a failed refresh is reported by the host unit, not retried against FRED
+      activeDeadlineSeconds: 10800   # the host unit's TimeoutStartSec (3h); a normal run takes seconds
+      ttlSecondsAfterFinished: 604800
+      template:
+        metadata:
+          labels: {app: fred-public-data-refresh}
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          # curl-style resolvers give up when the egress policy refuses the first search-domain variant of a name;
+          # with ndots 1 the real name is asked first.
+          dnsConfig:
+            options: [{name: ndots, value: "1"}]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000     # the owner's uid: the data and viz folders are theirs
+            runAsGroup: 1000
+            # No fsGroup: on a local volume it would recursively change the group of the real files.
+            seccompProfile: {type: RuntimeDefault}
+          containers:
+            - name: refresh
+              image: localhost:5000/fred-public-data:k3s
+              imagePullPolicy: Always
+              resources:
+                # A run takes a few seconds and well under 500 MB. A low CPU request keeps the scheduling weight
+                # low, like the host unit's CPUWeight=20.
+                requests: {cpu: 50m, memory: 256Mi}
+                limits: {memory: 1Gi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              volumeMounts:
+                - {name: data, mountPath: /app/data}
+                - {name: viz, mountPath: /app/viz}
+                - {name: tmp, mountPath: /tmp}
+          volumes:
+            - name: data
+              persistentVolumeClaim: {claimName: data}
+            - name: viz
+              persistentVolumeClaim: {claimName: viz}
+            - name: tmp
+              emptyDir: {sizeLimit: 256Mi}
