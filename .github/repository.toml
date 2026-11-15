@@ -4,6 +4,7 @@
 [repository]
 # One line shown on GitHub. Keep it free of private repository names and local paths.
 description = "FRED (Federal Reserve Economic Data) time-series mirror and visualization tooling"
+topics = ["fred", "economic-data", "time-series", "python", "data-visualization", "public-data", "matplotlib", "k3s"]
 
 [main_branch]
 # Direct commits and pushes to main are refused unless this is true.
