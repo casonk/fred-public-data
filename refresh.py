@@ -1,16 +1,11 @@
 import argparse
 import os
-import sys
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
 import requests
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
